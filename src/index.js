@@ -4,6 +4,7 @@ import Events from "events";
 export default class WebRTC {
   constructor() {
     this.rtc = null;
+    this.dataChannels = {};
     this.dataChannel = null;
     this.type = "";
     this.ev = new Events.EventEmitter();
@@ -13,25 +14,25 @@ export default class WebRTC {
     this.isDisconnected = false;
   }
 
-  createDatachannel(peerConnection, label) {
+  createDatachannel(label) {
     try {
-      const dataChannel = peerConnection.createDataChannel(label, {
+      const dc = this.rtc.createDataChannel(label, {
         reliable: true
       });
-      return dataChannel;
+      this._dataChannelEvents(dc, this.ev);
+      this.dataChannels[label] = dc;
+      return dc;
     } catch (dce) {
       console.log("dc established error: " + dce.message);
     }
   }
 
-  dataChannelEvents(channel) {
+  _dataChannelEvents(channel) {
     channel.onopen = () => {
-      //console.log(channel);
       console.log("dc opened");
       this.ev.emit("connect");
     };
     channel.onmessage = event => {
-      //console.log("Received message:" + event.data);
       this.ev.emit("data", event.data);
     };
     channel.onerror = err => {
@@ -43,7 +44,7 @@ export default class WebRTC {
     };
   }
 
-  prepareNewConnection() {
+  _prepareNewConnection() {
     const pc_config = {
       iceServers: [{ urls: "stun:stun.webrtc.ecl.ntt.com:3478" }]
     };
@@ -62,7 +63,7 @@ export default class WebRTC {
     peer.ondatachannel = evt => {
       if (this.dataChannel === null) {
         this.dataChannel = evt.channel;
-        this.dataChannelEvents(evt.channel);
+        this._dataChannelEvents(evt.channel);
       }
     };
     return peer;
@@ -70,19 +71,16 @@ export default class WebRTC {
 
   makeOffer(label) {
     this.type = "offer";
-    const peer = this.prepareNewConnection();
-    // Offer側でネゴシエーションが必要になったときの処理
-    peer.onnegotiationneeded = async () => {
+    this.rtc = this._prepareNewConnection();
+    this.rtc.onnegotiationneeded = async () => {
       try {
-        let offer = await peer.createOffer();
-        await peer.setLocalDescription(offer);
+        let offer = await this.rtc.createOffer();
+        await this.rtc.setLocalDescription(offer);
+        this.dataChannel = this.createDatachannel(label);
       } catch (err) {
         console.error("setLocalDescription(offer) ERROR: ", err);
       }
-    };
-    this.dataChannel = this.createDatachannel(peer, label);
-    this.dataChannelEvents(this.dataChannel, this.ev);
-    this.rtc = peer;
+    };    
   }
 
   setAnswer(sdp) {
@@ -94,18 +92,16 @@ export default class WebRTC {
     }
   }
 
-  // Answer SDPを生成する
   async makeAnswer(sdp) {
     this.type = "answer";
-    const peerConnection = this.prepareNewConnection();
+    this.rtc = this._prepareNewConnection();
     try {
-      //console.log("make answer", sdp);
-      await peerConnection.setRemoteDescription(sdp);
+      await this.rtc.setRemoteDescription(sdp);
       console.log("sending Answer. Creating remote session description...");
       try {
-        const answer = await peerConnection.createAnswer();
+        const answer = await this.rtc.createAnswer();
         console.log("createAnswer() succsess in promise");
-        await peerConnection.setLocalDescription(answer);
+        await this.rtc.setLocalDescription(answer);
         console.log("setLocalDescription() succsess in promise");
       } catch (err) {
         console.error(err);
@@ -113,7 +109,6 @@ export default class WebRTC {
     } catch (err) {
       console.error("setRemoteDescription(offer) ERROR: ", err);
     }
-    this.rtc = peerConnection;
   }
 
   send(data) {
