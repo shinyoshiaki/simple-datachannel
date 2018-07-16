@@ -1,6 +1,6 @@
 {
   "name": "simple-datachannel",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "",
   "main": "lib/index.js",
   "files": [
@@ -8,7 +8,8 @@
   ],
   "scripts": {
     "build": "NODE_ENV=production babel src --out-dir lib --source-maps inline",
-    "test": "mocha ./lib"
+    "test": "mocha ./lib",
+    "sample": "node ./lib/sample.js"
   },
   "repository": {
     "type": "git",

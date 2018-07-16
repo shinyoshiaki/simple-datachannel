@@ -8,7 +8,7 @@ export default class WebRTC {
     this.dataChannel = null;
     this.type = "";
     this.ev = new Events.EventEmitter();
-    this.nodeId = null;
+    this.nodeId = "";
     this.isConnected = false;
     this.onicecandidate = false;
     this.isDisconnected = false;
@@ -72,7 +72,8 @@ export default class WebRTC {
   makeOffer(label) {
     this.type = "offer";
     this.rtc = this._prepareNewConnection();
-    this.rtc.onnegotiationneeded = async () => {
+    console.log("makeOffer", label);
+    this.rtc.onnegotiationneeded = async () => {      
       try {
         let offer = await this.rtc.createOffer();
         await this.rtc.setLocalDescription(offer);
