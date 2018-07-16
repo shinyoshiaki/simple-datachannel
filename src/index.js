@@ -33,7 +33,7 @@ export default class WebRTC {
       this.ev.emit("connect");
     };
     channel.onmessage = event => {
-      this.ev.emit("data", event.data);
+      this.ev.emit("data", { label: channel.label, data: event.data });
     };
     channel.onerror = err => {
       console.log("Datachannel Error: " + err);
@@ -80,7 +80,7 @@ export default class WebRTC {
       } catch (err) {
         console.error("setLocalDescription(offer) ERROR: ", err);
       }
-    };    
+    };
   }
 
   setAnswer(sdp) {
@@ -97,12 +97,9 @@ export default class WebRTC {
     this.rtc = this._prepareNewConnection();
     try {
       await this.rtc.setRemoteDescription(sdp);
-      console.log("sending Answer. Creating remote session description...");
       try {
         const answer = await this.rtc.createAnswer();
-        console.log("createAnswer() succsess in promise");
         await this.rtc.setLocalDescription(answer);
-        console.log("setLocalDescription() succsess in promise");
       } catch (err) {
         console.error(err);
       }
@@ -111,9 +108,13 @@ export default class WebRTC {
     }
   }
 
-  send(data) {
+  send(data, label = null) {
     try {
-      this.dataChannel.send(data);
+      if (label === null) {
+        this.dataChannel.send(data);
+      } else {
+        this.dataChannels[label].send(data);
+      }
     } catch (error) {
       this.isDisconnected = true;
     }
