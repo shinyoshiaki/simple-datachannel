@@ -73,15 +73,16 @@ export default class WebRTC {
     this.type = "offer";
     this.rtc = this._prepareNewConnection();
     console.log("makeOffer", label);
-    this.rtc.onnegotiationneeded = async () => {      
+    this.rtc.onnegotiationneeded = async () => {
       try {
         let offer = await this.rtc.createOffer();
         await this.rtc.setLocalDescription(offer);
-        this.dataChannel = this.createDatachannel(label);
       } catch (err) {
         console.error("setLocalDescription(offer) ERROR: ", err);
       }
     };
+    //＠重要：データチャネルはここでないとバグる
+    this.dataChannel = this.createDatachannel(label);
   }
 
   setAnswer(sdp) {
