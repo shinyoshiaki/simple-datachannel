@@ -44,11 +44,18 @@ export default class WebRTC {
     };
   }
 
-  _prepareNewConnection() {
-    const pc_config = {
-      iceServers: [{ urls: "stun:stun.webrtc.ecl.ntt.com:3478" }]
-    };
-    const peer = new wrtc.RTCPeerConnection(pc_config);
+  _prepareNewConnection(opt) {
+    let peer;
+    if (opt.disable_stun) {
+      console.log("disable stun");
+      peer = new wrtc.RTCPeerConnection({
+        iceServers: []
+      });
+    } else {
+      peer = new wrtc.RTCPeerConnection({
+        iceServers: [{ urls: "stun:stun.webrtc.ecl.ntt.com:3478" }]
+      });
+    }
 
     peer.onicecandidate = evt => {
       if (!evt.candidate) {
@@ -69,9 +76,9 @@ export default class WebRTC {
     return peer;
   }
 
-  makeOffer(label) {
+  makeOffer(label, opt = {}) {
     this.type = "offer";
-    this.rtc = this._prepareNewConnection();
+    this.rtc = this._prepareNewConnection(opt);
     console.log("makeOffer", label);
     this.rtc.onnegotiationneeded = async () => {
       try {
@@ -94,9 +101,9 @@ export default class WebRTC {
     }
   }
 
-  async makeAnswer(sdp) {
+  async makeAnswer(sdp, opt = {}) {
     this.type = "answer";
-    this.rtc = this._prepareNewConnection();
+    this.rtc = this._prepareNewConnection(opt);
     try {
       await this.rtc.setRemoteDescription(sdp);
       try {
