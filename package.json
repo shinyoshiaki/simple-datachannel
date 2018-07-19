@@ -23,6 +23,7 @@
   "homepage": "https://github.com/shinyoshiaki/simple-datachannel#readme",
   "dependencies": {
     "events": "^3.0.0",
+    "react-native-webrtc": "^1.63.0",
     "wrtc": "^0.1.6"
   },
   "devDependencies": {
