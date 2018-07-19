@@ -10,5 +10,15 @@ peerOffer.ev.on("signal", sdp => {
     peerOffer.setAnswer(sdp);
   });
 });
-peerOffer.ev.on("connect", () => console.log("offer connected"));
-peerAnswer.ev.on("connect", () => console.log("answer connected"));
+peerOffer.ev.once("connect", () => {
+  console.log("offer connected");
+  peerOffer.ev.on("data", data => console.log("ondata offer", data));
+  peerOffer.send("hello", "test");
+  peerOffer.createDatachannel("second");
+  peerOffer.send("test", "second");
+});
+peerAnswer.ev.once("connect", () => {
+  console.log("answer connected");
+  peerAnswer.ev.on("data", data => console.log("ondata answer", data));
+  peerAnswer.send("hi", "test");
+});

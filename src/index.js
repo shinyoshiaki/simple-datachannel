@@ -5,7 +5,6 @@ export default class WebRTC {
   constructor() {
     this.rtc = null;
     this.dataChannels = {};
-    this.dataChannel = null;
     this.type = "";
     this.ev = new Events.EventEmitter();
     this.nodeId = "";
@@ -59,7 +58,6 @@ export default class WebRTC {
 
     peer.onicecandidate = evt => {
       if (!evt.candidate) {
-        console.log("empty ice event");
         if (!this.onicecandidate) {
           this.onicecandidate = true;
           this.ev.emit("signal", peer.localDescription);
@@ -68,10 +66,9 @@ export default class WebRTC {
     };
 
     peer.ondatachannel = evt => {
-      if (this.dataChannel === null) {
-        this.dataChannel = evt.channel;
-        this._dataChannelEvents(evt.channel);
-      }
+      const dataChannel = evt.channel;
+      this.dataChannels[dataChannel.label] = dataChannel;
+      this._dataChannelEvents(dataChannel);
     };
     return peer;
   }
@@ -79,7 +76,6 @@ export default class WebRTC {
   makeOffer(label, opt = {}) {
     this.type = "offer";
     this.rtc = this._prepareNewConnection(opt);
-    console.log("makeOffer", label);
     this.rtc.onnegotiationneeded = async () => {
       try {
         let offer = await this.rtc.createOffer();
@@ -89,11 +85,10 @@ export default class WebRTC {
       }
     };
     //＠重要：データチャネルはここでないとバグる
-    this.dataChannel = this.createDatachannel(label);
+    this.createDatachannel(label);
   }
 
   setAnswer(sdp) {
-    console.log("setAnswer", sdp);
     try {
       this.rtc.setRemoteDescription(sdp);
     } catch (err) {
@@ -117,13 +112,9 @@ export default class WebRTC {
     }
   }
 
-  send(data, label = null) {
+  send(data, label) {
     try {
-      if (label === null) {
-        this.dataChannel.send(data);
-      } else {
-        this.dataChannels[label].send(data);
-      }
+      this.dataChannels[label].send(data);
     } catch (error) {
       this.isDisconnected = true;
     }
