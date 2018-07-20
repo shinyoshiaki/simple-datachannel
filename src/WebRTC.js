@@ -116,6 +116,7 @@ export default class WebRTC {
     try {
       this.dataChannels[label].send(data);
     } catch (error) {
+      console.log("dc send error", error);
       this.isDisconnected = true;
     }
   }

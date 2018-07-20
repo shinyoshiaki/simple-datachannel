@@ -1,4 +1,4 @@
-import WebRTC from "./index";
+import WebRTC from "./WebRTC";
 const peerOffer = new WebRTC();
 const peerAnswer = new WebRTC();
 
