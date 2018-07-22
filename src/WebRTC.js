@@ -1,5 +1,5 @@
-import wrtc from "wrtc";
 import Events from "events";
+import { RTCPeerConnection, RTCSessionDescription } from "wrtc";
 
 export default class WebRTC {
   constructor() {
@@ -32,7 +32,11 @@ export default class WebRTC {
       this.ev.emit("connect");
     };
     channel.onmessage = event => {
-      this.ev.emit("data", { label: channel.label, data: event.data });
+      this.ev.emit("data", {
+        label: channel.label,
+        data: event.data,
+        nodeId: this.nodeId
+      });
     };
     channel.onerror = err => {
       console.log("Datachannel Error: " + err);
@@ -47,11 +51,11 @@ export default class WebRTC {
     let peer;
     if (opt.disable_stun) {
       console.log("disable stun");
-      peer = new wrtc.RTCPeerConnection({
+      peer = new RTCPeerConnection({
         iceServers: []
       });
     } else {
-      peer = new wrtc.RTCPeerConnection({
+      peer = new RTCPeerConnection({
         iceServers: [{ urls: "stun:stun.webrtc.ecl.ntt.com:3478" }]
       });
     }
@@ -90,7 +94,7 @@ export default class WebRTC {
 
   setAnswer(sdp) {
     try {
-      this.rtc.setRemoteDescription(sdp);
+      this.rtc.setRemoteDescription(new RTCSessionDescription(sdp));
     } catch (err) {
       console.error("setRemoteDescription(answer) ERROR: ", err);
     }
@@ -100,7 +104,7 @@ export default class WebRTC {
     this.type = "answer";
     this.rtc = this._prepareNewConnection(opt);
     try {
-      await this.rtc.setRemoteDescription(sdp);
+      await this.rtc.setRemoteDescription(new RTCSessionDescription(sdp));
       try {
         const answer = await this.rtc.createAnswer();
         await this.rtc.setLocalDescription(answer);
