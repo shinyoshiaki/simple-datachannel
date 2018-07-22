@@ -11,6 +11,12 @@ export default class WebRTC {
     this.isConnected = false;
     this.onicecandidate = false;
     this.isDisconnected = false;
+    this.events = {
+      CONNECT: "connect",
+      DATA: "data",
+      DISCONNECT: "disconnect",
+      SIGNAL: "signal"
+    };
   }
 
   createDatachannel(label) {
@@ -29,10 +35,10 @@ export default class WebRTC {
   _dataChannelEvents(channel) {
     channel.onopen = () => {
       console.log("dc opened");
-      this.ev.emit("connect");
+      this.ev.emit(this.events.CONNECT);
     };
     channel.onmessage = event => {
-      this.ev.emit("data", {
+      this.ev.emit(this.events.DATA, {
         label: channel.label,
         data: event.data,
         nodeId: this.nodeId
@@ -43,6 +49,7 @@ export default class WebRTC {
     };
     channel.onclose = () => {
       console.log("DataChannel is closed");
+      this.ev.emit(this.events.DISCONNECT);
       this.isDisconnected = true;
     };
   }
@@ -64,7 +71,7 @@ export default class WebRTC {
       if (!evt.candidate) {
         if (!this.onicecandidate) {
           this.onicecandidate = true;
-          this.ev.emit("signal", peer.localDescription);
+          this.ev.emit(this.events.SIGNAL, peer.localDescription);
         }
       }
     };
