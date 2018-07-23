@@ -14,11 +14,11 @@ peerOffer.ev.once("connect", () => {
   console.log("offer connected");
   peerOffer.ev.on("data", data => console.log("ondata offer", data));
   peerOffer.send("hello", "test");
-  peerOffer.createDatachannel("second");
   peerOffer.send("test", "second");
 });
 peerAnswer.ev.once("connect", () => {
   console.log("answer connected");
   peerAnswer.ev.on("data", data => console.log("ondata answer", data));
   peerAnswer.send("hi", "test");
+  peerAnswer.send("test!!", "third");
 });

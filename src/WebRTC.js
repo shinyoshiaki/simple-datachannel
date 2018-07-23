@@ -19,7 +19,7 @@ export default class WebRTC {
     };
   }
 
-  createDatachannel(label) {
+  _createDatachannel(label) {
     try {
       const dc = this.rtc.createDataChannel(label, {
         reliable: true
@@ -84,7 +84,7 @@ export default class WebRTC {
     return peer;
   }
 
-  makeOffer(label, opt = {}) {
+  makeOffer(opt = { disable_stun: false }) {
     this.type = "offer";
     this.rtc = this._prepareNewConnection(opt);
     this.rtc.onnegotiationneeded = async () => {
@@ -95,8 +95,7 @@ export default class WebRTC {
         console.error("setLocalDescription(offer) ERROR: ", err);
       }
     };
-    //＠重要：データチャネルはここでないとバグる
-    this.createDatachannel(label);
+    this._createDatachannel("datachannel");
   }
 
   setAnswer(sdp) {
@@ -107,7 +106,7 @@ export default class WebRTC {
     }
   }
 
-  async makeAnswer(sdp, opt = {}) {
+  async makeAnswer(sdp, opt = { disable_stun: false }) {
     this.type = "answer";
     this.rtc = this._prepareNewConnection(opt);
     try {
@@ -124,6 +123,9 @@ export default class WebRTC {
   }
 
   send(data, label) {
+    if (!Object.keys(this.dataChannels).includes(label)) {
+      this._createDatachannel(label);
+    }
     try {
       this.dataChannels[label].send(data);
     } catch (error) {
