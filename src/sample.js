@@ -2,7 +2,7 @@ import WebRTC from "./WebRTC";
 const peerOffer = new WebRTC();
 const peerAnswer = new WebRTC();
 
-peerOffer.makeOffer("test", { disable_stun: true });
+peerOffer.makeOffer({ disable_stun: true });
 peerOffer.ev.on("signal", sdp => {
   console.log("offer signal");
   peerAnswer.makeAnswer(sdp, { disable_stun: true });
